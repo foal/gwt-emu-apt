@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -34,7 +33,6 @@ import one.util.streamex.EntryStream;
 import one.util.streamex.StreamEx;
 
 @AutoService(Processor.class)
-@SuppressWarnings("nls")
 public class EmuProcessor extends AbstractProcessor {
 
 	private final AtomicInteger round = new AtomicInteger();
@@ -44,10 +42,10 @@ public class EmuProcessor extends AbstractProcessor {
 		return ImmutableSet.of(Wrap.class.getName());
 	}
 
-	@Override
-	public SourceVersion getSupportedSourceVersion() {
-		return SourceVersion.latestSupported();
-	}
+//	@Override
+//	public SourceVersion getSupportedSourceVersion() {
+//		return SourceVersion.latestSupported();
+//	}
 
 	@SuppressWarnings({ "resource", "boxing" })
 	@Override

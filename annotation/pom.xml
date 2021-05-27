@@ -10,7 +10,7 @@
 	<name>JRESEARCH-COMMONS: GWT tools JRE emulation APT annotations</name>
 	<packaging>gwt-lib</packaging>
 	<dependencies>
-			<dependency>
+		<dependency>
 			<groupId>com.google.gwt</groupId>
 			<artifactId>gwt-user</artifactId>
 			<scope>provided</scope>

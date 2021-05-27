@@ -1,5 +1,7 @@
 package org.jresearch.gwt.tool.emu.apt;
 
+import java.util.Optional;
+
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
@@ -7,12 +9,12 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor8;
+import javax.lang.model.util.SimpleTypeVisitor14;
 
 import one.util.streamex.StreamEx;
 
 @SuppressWarnings("resource")
-public class RepackageVisitor extends SimpleTypeVisitor8<TypeMirror, State> {
+public class RepackageVisitor extends SimpleTypeVisitor14<TypeMirror, State> {
 
 	private ProcessingEnvironment env;
 	private String emuPackage;
@@ -41,12 +43,13 @@ public class RepackageVisitor extends SimpleTypeVisitor8<TypeMirror, State> {
 
 //	@Override
 //	public TypeMirror visitTypeVariable(TypeVariable t, State state) {
+//		env.getMessager().printMessage(Kind.ERROR, String.format("Call for visitTypeVariable: %s", t));
 //		State lowerBoundState = new State();
 //		TypeMirror lowerBound = t.getLowerBound().accept(this, lowerBoundState);
 //		State upperBoundState = new State();
 //		TypeMirror upperBound = t.getUpperBound().accept(this, upperBoundState);
 //		if (lowerBoundState.isChanged() || upperBoundState.isChanged()) {
-////			report error
+//			env.getMessager().printMessage(Kind.ERROR, String.format("Changed visitTypeVariable - changed: %s", t));
 //		}
 //		return t;
 //	}
@@ -65,8 +68,8 @@ public class RepackageVisitor extends SimpleTypeVisitor8<TypeMirror, State> {
 
 	@Override
 	public TypeMirror visitWildcard(WildcardType t, State state) {
-		TypeMirror extendsBound = t.getExtendsBound().accept(this, state);
-		TypeMirror superBound = t.getSuperBound().accept(this, state);
+		TypeMirror extendsBound = Optional.ofNullable(t.getExtendsBound()).map(b -> b.accept(this, state)).orElse(null);
+		TypeMirror superBound = Optional.ofNullable(t.getSuperBound()).map(b -> b.accept(this, state)).orElse(null);
 		return env.getTypeUtils().getWildcardType(extendsBound, superBound);
 	}
 

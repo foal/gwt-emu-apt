@@ -5,6 +5,7 @@ import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -24,19 +25,30 @@ import com.squareup.javapoet.TypeVariableName;
 
 import one.util.streamex.StreamEx;
 
-@SuppressWarnings("nls")
 public class WrapClassBuilder {
 
 	private final Builder poetBuilder;
 	private final RepackageVisitor repackageVisitor;
 
+	@SuppressWarnings("resource")
 	private WrapClassBuilder(@Nonnull final TypeElement originalClass, @Nonnull final ProcessingEnvironment env, @Nonnull final String emuPackage) {
 		String className = originalClass.getSimpleName().toString();
 
 		repackageVisitor = new RepackageVisitor(env, emuPackage);
 
-		poetBuilder = TypeSpec.classBuilder(className)
-				.addModifiers(Modifier.PUBLIC);
+		poetBuilder = TypeSpec.classBuilder(className).addModifiers(Modifier.PUBLIC);
+
+		TypeMirror superclass = originalClass.getSuperclass();
+		if (superclass != null) {
+			TypeMirror newSuperclass = superclass.accept(repackageVisitor, new State());
+			if (!env.getTypeUtils().asElement(newSuperclass).getModifiers().contains(Modifier.FINAL)) {
+				poetBuilder.superclass(superclass.accept(repackageVisitor, new State()));
+			}
+		}
+
+		StreamEx.of(originalClass.getInterfaces())
+				.map(i -> i.accept(repackageVisitor, new State()))
+				.forEach(poetBuilder::addSuperinterface);
 	}
 
 	public static WrapClassBuilder create(@Nonnull final TypeElement originalClass, @Nonnull final ProcessingEnvironment env, @Nonnull final String emuPackage) {
@@ -44,17 +56,17 @@ public class WrapClassBuilder {
 	}
 
 	public WrapClassBuilder add(@Nonnull final Element element) {
-		if (element instanceof ExecutableElement) {
-			return addMethod((ExecutableElement) element);
+		if (element instanceof ExecutableElement method) {
+			return addMethod(method, method.getKind() == ElementKind.CONSTRUCTOR);
 		}
-		if (element instanceof VariableElement) {
-			return addField((VariableElement) element);
+		if (element instanceof VariableElement field) {
+			return addField(field);
 		}
 		return this;
 	}
 
 	@SuppressWarnings("resource")
-	public WrapClassBuilder addMethod(@Nonnull final ExecutableElement method) {
+	public WrapClassBuilder addMethod(@Nonnull final ExecutableElement method, boolean constructor) {
 		// compare (done while build whole class)
 		// show error if duplicate (done while build whole class)
 
@@ -64,8 +76,9 @@ public class WrapClassBuilder {
 			return this;
 		}
 
-		String methodName = method.getSimpleName().toString();
-		MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder(methodName);
+		MethodSpec.Builder methodBuilder = constructor
+				? MethodSpec.constructorBuilder()
+				: MethodSpec.methodBuilder(method.getSimpleName().toString());
 
 		methodBuilder.addModifiers(modifiers);
 
@@ -77,10 +90,12 @@ public class WrapClassBuilder {
 				.forEachOrdered(methodBuilder::addTypeVariable);
 
 		StreamEx.of(method.getParameters())
-				.map(ParameterSpec::get)
+				.map(this::asParameterSpec)
 				.forEachOrdered(methodBuilder::addParameter);
 
-		methodBuilder.returns(TypeName.get(method.getReturnType().accept(repackageVisitor, new State())));
+		if (!constructor) {
+			methodBuilder.returns(TypeName.get(method.getReturnType().accept(repackageVisitor, new State())));
+		}
 
 		methodBuilder.varargs(method.isVarArgs());
 
@@ -89,8 +104,8 @@ public class WrapClassBuilder {
 				.map(TypeName::get)
 				.forEach(methodBuilder::addException);
 
-		if (hasReturn(method)) {
-			methodBuilder.addStatement("return null");
+		if (!constructor && hasReturn(method)) {
+			methodBuilder.addStatement("throw new UnsupportedOperationException(\"GWT super source wrap class\")");
 		}
 
 		poetBuilder.addMethod(methodBuilder.build());
@@ -98,21 +113,34 @@ public class WrapClassBuilder {
 		return this;
 	}
 
+	private ParameterSpec asParameterSpec(VariableElement element) {
+		TypeName type = TypeName.get(element.asType().accept(repackageVisitor, new State()));
+		String name = element.getSimpleName().toString();
+		return ParameterSpec.builder(type, name)
+				.addModifiers(element.getModifiers())
+				.build();
+	}
+
 	private static boolean hasReturn(ExecutableElement method) {
 		TypeMirror returnType = method.getReturnType();
 		return !(returnType instanceof NoType) || returnType.getKind() != TypeKind.VOID;
 	}
 
+	@SuppressWarnings("resource")
 	public WrapClassBuilder addField(@Nonnull final VariableElement field) {
 		Set<Modifier> modifiers = field.getModifiers();
 		if (modifiers.contains(Modifier.PRIVATE)) {
 			// ignore private fields
 			return this;
 		}
+		// Remove the final mod. from cloned variable to skip initialization
+		Modifier[] wrapModifiers = StreamEx.of(modifiers)
+				.remove(Modifier.FINAL::equals)
+				.toArray(Modifier.class);
 
 		String fieldName = field.getSimpleName().toString();
 
-		poetBuilder.addField(TypeName.get(field.asType().accept(repackageVisitor, new State())), fieldName, modifiers.toArray(new Modifier[modifiers.size()]));
+		poetBuilder.addField(TypeName.get(field.asType().accept(repackageVisitor, new State())), fieldName, wrapModifiers);
 
 		return this;
 	}
