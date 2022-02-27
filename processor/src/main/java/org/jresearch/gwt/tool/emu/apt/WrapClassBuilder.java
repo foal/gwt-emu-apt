@@ -56,11 +56,11 @@ public class WrapClassBuilder {
 	}
 
 	public WrapClassBuilder add(@Nonnull final Element element) {
-		if (element instanceof ExecutableElement method) {
-			return addMethod(method, method.getKind() == ElementKind.CONSTRUCTOR);
+		if (element instanceof ExecutableElement) {
+			return addMethod((ExecutableElement) element, element.getKind() == ElementKind.CONSTRUCTOR);
 		}
-		if (element instanceof VariableElement field) {
-			return addField(field);
+		if (element instanceof VariableElement) {
+			return addField((VariableElement) element);
 		}
 		return this;
 	}
