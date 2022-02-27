@@ -23,7 +23,6 @@
 	</modules>
 	<properties>
 		<gwt.version>2.9.0</gwt.version>
-        <sonar.projectKey>foal_gwt-emu-apt</sonar.projectKey>
         <java.version>8</java.version>
 	</properties>
 	<dependencyManagement>
