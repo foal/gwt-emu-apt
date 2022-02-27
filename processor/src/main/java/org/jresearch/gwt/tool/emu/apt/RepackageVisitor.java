@@ -9,12 +9,12 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.type.WildcardType;
-import javax.lang.model.util.SimpleTypeVisitor14;
+import javax.lang.model.util.SimpleTypeVisitor8;
 
 import one.util.streamex.StreamEx;
 
 @SuppressWarnings("resource")
-public class RepackageVisitor extends SimpleTypeVisitor14<TypeMirror, State> {
+public class RepackageVisitor extends SimpleTypeVisitor8<TypeMirror, State> {
 
 	private ProcessingEnvironment env;
 	private String emuPackage;
@@ -29,42 +29,44 @@ public class RepackageVisitor extends SimpleTypeVisitor14<TypeMirror, State> {
 		return e;
 	}
 
-//	@Override
-//	public TypeMirror visitIntersection(IntersectionType t, State state) {
-//		State interceptionState = new State();
-//		StreamEx.of(t.getBounds())
-//				.map(type -> type.accept(this, interceptionState))
-//				.toArray(TypeMirror.class);
-//		if (interceptionState.isChanged()) {
-////			report error
-//		}
-//		return t;
-//	}
+	// @Override
+	// public TypeMirror visitIntersection(IntersectionType t, State state) {
+	// State interceptionState = new State();
+	// StreamEx.of(t.getBounds())
+	// .map(type -> type.accept(this, interceptionState))
+	// .toArray(TypeMirror.class);
+	// if (interceptionState.isChanged()) {
+	//// report error
+	// }
+	// return t;
+	// }
 
-//	@Override
-//	public TypeMirror visitTypeVariable(TypeVariable t, State state) {
-//		env.getMessager().printMessage(Kind.ERROR, String.format("Call for visitTypeVariable: %s", t));
-//		State lowerBoundState = new State();
-//		TypeMirror lowerBound = t.getLowerBound().accept(this, lowerBoundState);
-//		State upperBoundState = new State();
-//		TypeMirror upperBound = t.getUpperBound().accept(this, upperBoundState);
-//		if (lowerBoundState.isChanged() || upperBoundState.isChanged()) {
-//			env.getMessager().printMessage(Kind.ERROR, String.format("Changed visitTypeVariable - changed: %s", t));
-//		}
-//		return t;
-//	}
+	// @Override
+	// public TypeMirror visitTypeVariable(TypeVariable t, State state) {
+	// env.getMessager().printMessage(Kind.ERROR, String.format("Call for
+	// visitTypeVariable: %s", t));
+	// State lowerBoundState = new State();
+	// TypeMirror lowerBound = t.getLowerBound().accept(this, lowerBoundState);
+	// State upperBoundState = new State();
+	// TypeMirror upperBound = t.getUpperBound().accept(this, upperBoundState);
+	// if (lowerBoundState.isChanged() || upperBoundState.isChanged()) {
+	// env.getMessager().printMessage(Kind.ERROR, String.format("Changed
+	// visitTypeVariable - changed: %s", t));
+	// }
+	// return t;
+	// }
 
-//	@Override
-//	public TypeMirror visitUnion(UnionType t, State state) {
-//		State unionState = new State();
-//		StreamEx.of(t.getAlternatives())
-//				.map(type -> type.accept(this, unionState))
-//				.toArray(TypeMirror.class);
-//		if (unionState.isChanged()) {
-////			report error
-//		}
-//		return t;
-//	}
+	// @Override
+	// public TypeMirror visitUnion(UnionType t, State state) {
+	// State unionState = new State();
+	// StreamEx.of(t.getAlternatives())
+	// .map(type -> type.accept(this, unionState))
+	// .toArray(TypeMirror.class);
+	// if (unionState.isChanged()) {
+	//// report error
+	// }
+	// return t;
+	// }
 
 	@Override
 	public TypeMirror visitWildcard(WildcardType t, State state) {
