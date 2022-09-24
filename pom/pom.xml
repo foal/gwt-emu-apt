@@ -23,7 +23,7 @@
 	</modules>
 	<properties>
 		<gwt.version>2.9.0</gwt.version>
-        <java.version>8</java.version>
+		<java.version>8</java.version>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
